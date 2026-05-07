@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "sasta-llm",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {

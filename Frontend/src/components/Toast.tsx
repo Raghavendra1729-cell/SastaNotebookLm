@@ -14,20 +14,22 @@ export function Toast({ toast }: ToastProps) {
   const isSuccess = toast.tone === 'success'
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-50">
+    <div className="pointer-events-none fixed bottom-8 left-1/2 -translate-x-1/2 z-50 md:left-auto md:right-8 md:translate-x-0">
       <div
-        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm shadow-[0_20px_50px_rgba(15,23,42,0.18)] ${
-          isSuccess ? 'border-emerald-200 bg-white text-slate-800' : 'border-rose-200 bg-white text-slate-800'
+        className={`flex animate-in fade-in slide-in-from-bottom-2 items-center gap-3 rounded-2xl border px-5 py-4 text-[13px] font-bold shadow-2xl backdrop-blur-xl transition-all ${
+          isSuccess 
+            ? 'border-emerald-500/20 bg-[#0c0e12]/90 text-emerald-400' 
+            : 'border-rose-500/20 bg-[#0c0e12]/90 text-rose-400'
         }`}
       >
         <div
-          className={`rounded-full p-1.5 ${
-            isSuccess ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
+            isSuccess ? 'bg-emerald-500/10' : 'bg-rose-500/10'
           }`}
         >
           {isSuccess ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
         </div>
-        <span>{toast.message}</span>
+        <span className="leading-tight">{toast.message}</span>
       </div>
     </div>
   )

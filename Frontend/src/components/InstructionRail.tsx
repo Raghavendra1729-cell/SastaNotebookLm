@@ -1,36 +1,81 @@
-import { Compass, Sparkles } from 'lucide-react'
+import { HelpCircle, Info, Layout } from 'lucide-react'
+import { motion } from 'framer-motion'
 
-const quickRules = ['Upload files or paste text on the right.', 'Ask naturally. Add context only when needed.', 'Press Enter to send. Shift+Enter for a new line.']
+const guidelines = [
+  'Upload PDF or TXT files to provide context.',
+  'Ask questions based on your specific documents.',
+  'Use the clear interface to read long answers.'
+]
 
 export function InstructionRail() {
   return (
-    <aside className="hidden min-h-screen border-r border-white/10 bg-[#0f1115] lg:flex lg:w-[250px] lg:flex-col">
-      <div className="flex-1 px-6 py-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">
-          <Sparkles className="h-3.5 w-3.5" />
-          Notes
+    <aside className="hidden h-full border-r border-white/5 bg-black/20 backdrop-blur-3xl lg:flex lg:w-[260px] lg:flex-col">
+      <div className="flex-1 overflow-y-auto px-6 py-10 custom-scrollbar relative">
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+            <Layout className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="font-['Manrope'] text-lg font-black tracking-tighter text-white">
+              Sasta <span className="text-blue-500">LLM</span>
+            </h1>
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Interface v2.1</p>
+          </div>
         </div>
 
-        <h1 className="mt-5 font-['Manrope',_ui-sans-serif,_system-ui] text-2xl font-semibold tracking-tight text-white">
-          Sasta NotebookLm
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-slate-400">
-          Simple notebook chat with optional context grounding.
-        </p>
-
-        <section className="mt-8 rounded-2xl border border-white/10 bg-[#161a20] p-4">
-          <div className="flex items-center gap-2 text-slate-200">
-            <Compass className="h-4 w-4" />
-            <p className="text-xs font-semibold uppercase tracking-[0.16em]">How To Use</p>
-          </div>
-          <div className="mt-3 space-y-2">
-            {quickRules.map((rule) => (
-              <p key={rule} className="rounded-xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm leading-6 text-slate-300">
-                {rule}
+        <div className="space-y-10">
+          <section>
+            <div className="flex items-center gap-2 px-2 mb-4">
+              <Info className="h-4 w-4 text-blue-400" />
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                Purpose
+              </h3>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5">
+              <p className="text-[13px] leading-relaxed text-slate-400 font-medium">
+                A focused research environment built for reading, understanding, and synthesizing complex information.
               </p>
-            ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 px-2 mb-4">
+              <HelpCircle className="h-4 w-4 text-blue-400" />
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                Guidelines
+              </h3>
+            </div>
+            <div className="space-y-4">
+              {guidelines.map((rule, index) => (
+                <motion.div 
+                  key={index} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="rounded-xl border border-white/5 bg-white/[0.01] p-4 transition-all hover:bg-white/[0.03]"
+                >
+                  <div className="flex gap-3">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-[10px] font-bold text-blue-400">
+                      {index + 1}
+                    </span>
+                    <p className="text-[12px] leading-relaxed text-slate-300 font-medium">
+                      {rule}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div className="shrink-0 p-6 border-t border-white/5">
+        <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase">System Active</span>
           </div>
-        </section>
+        </div>
       </div>
     </aside>
   )

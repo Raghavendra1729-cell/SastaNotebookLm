@@ -1,7 +1,14 @@
 import type { ChangeEvent, DragEvent, RefObject } from 'react'
-import { ClipboardPaste, FileText, LoaderCircle, Paperclip, Sparkles, Upload } from 'lucide-react'
+import { ClipboardPaste, FileText, LoaderCircle, Upload, Files } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 import type { DocumentRecord } from '../types'
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 type SourceDockProps = {
   documents: DocumentRecord[]
@@ -23,129 +30,153 @@ export function SourceDock({
   acceptedFileTypes,
   onFileSelection,
   onDrop,
-  onPasteButtonClick,
   onDragStateChange,
+  onPasteButtonClick,
 }: SourceDockProps) {
   return (
-    <aside className="flex w-full flex-col border-t border-white/10 bg-[#101319] lg:w-[320px] lg:border-l lg:border-t-0">
-      <div className="border-b border-white/10 px-5 py-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Sources</p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">Attach context</h2>
+    <aside className="relative flex h-full w-full flex-col border-l border-white/5 bg-black/20 backdrop-blur-3xl lg:w-[320px]">
+      <header className="shrink-0 border-b border-white/5 px-6 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Files className="h-4 w-4 text-blue-400" />
+            <h2 className="font-['Manrope'] text-lg font-bold tracking-tight text-white">Sources</h2>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">Indexed</p>
-            <p className="mt-1 text-base font-semibold text-white">{documents.length}</p>
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+            <span className="text-xs font-bold text-blue-400">{documents.length}</span>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <label
-          onDragEnter={() => onDragStateChange(true)}
-          onDragOver={(event) => {
-            event.preventDefault()
-            onDragStateChange(true)
-          }}
-          onDragLeave={() => onDragStateChange(false)}
-          onDrop={onDrop}
-          className={`group flex cursor-pointer flex-col rounded-2xl border border-dashed p-5 transition ${
-            isDragActive
-              ? 'border-slate-300 bg-white/10'
-              : 'border-white/12 bg-white/4 hover:border-white/30 hover:bg-white/6'
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={acceptedFileTypes}
-            className="sr-only"
-            onChange={onFileSelection}
-          />
+      <div className="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar space-y-6">
+        <div className="space-y-3">
+          <label
+            onDragEnter={() => onDragStateChange(true)}
+            onDragOver={(event) => {
+              event.preventDefault()
+              onDragStateChange(true)
+            }}
+            onDragLeave={() => onDragStateChange(false)}
+            onDrop={onDrop}
+            className={cn(
+              "group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-all duration-300",
+              isDragActive
+                ? "border-blue-500 bg-blue-500/10"
+                : "border-white/10 bg-white/[0.01] hover:border-white/20 hover:bg-white/[0.03]"
+            )}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={acceptedFileTypes}
+              className="sr-only"
+              onChange={onFileSelection}
+            />
 
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-white">
-              {isUploading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+            <div className="p-5">
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-xl transition-all",
+                  isUploading ? "bg-blue-600 text-white" : "bg-white/5 text-slate-400 group-hover:text-blue-400"
+                )}>
+                  {isUploading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Upload File</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5 uppercase tracking-tighter">PDF or Text</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-base font-semibold text-white">
-                {isUploading ? 'Uploading...' : 'Drop or browse file'}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-slate-400">PDF and TXT supported.</p>
-            </div>
-          </div>
-        </label>
+            
+            <AnimatePresence>
+              {isDragActive && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-blue-600/10 backdrop-blur-sm"
+                >
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Drop here</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </label>
 
-        <button
-          type="button"
-          onClick={() => void onPasteButtonClick()}
-          className="mt-4 flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-left text-white transition hover:bg-white/8"
-        >
-          <div>
-            <p className="text-sm font-semibold">Paste text</p>
-            <p className="mt-1 text-sm leading-6 text-slate-400">Add clipboard text as context.</p>
-          </div>
-          <ClipboardPaste className="h-5 w-5 shrink-0 text-slate-300" />
-        </button>
-
-        <section className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="inline-flex items-center gap-2 text-slate-300">
-              <Paperclip className="h-4 w-4" />
-              <p className="text-xs font-semibold uppercase tracking-[0.14em]">Attached</p>
+          <button
+            type="button"
+            onClick={() => void onPasteButtonClick()}
+            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.01] p-5 text-left transition-all hover:border-white/20 hover:bg-white/[0.03] group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-slate-400 group-hover:text-blue-400">
+                <ClipboardPaste className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Paste Text</p>
+                <p className="text-[10px] font-bold text-slate-500 mt-0.5 uppercase tracking-tighter">Add from clipboard</p>
+              </div>
             </div>
-            <span className="text-xs text-slate-500">{documents.length} items</span>
-          </div>
+          </button>
+        </div>
+
+        <section>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-4 px-1">Active Sources</h3>
 
           <div className="space-y-3">
-            {documents.length > 0 ? (
-              documents.map((document, index) => (
-                <article
-                  key={document.id}
-                  className={`rounded-2xl border p-4 ${
-                    index === 0
-                      ? 'border-slate-400/40 bg-white/10'
-                      : 'border-white/10 bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex gap-3">
-                      <div className="mt-0.5 rounded-xl bg-white/10 p-2.5 text-slate-200">
-                        <FileText className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{document.name}</p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {document.source === 'paste' ? 'Pasted context' : 'Uploaded file'} • {document.chunks} chunks
-                        </p>
+            <AnimatePresence mode="popLayout">
+              {documents.length > 0 ? (
+                documents.map((document, index) => (
+                  <motion.article
+                    key={document.id}
+                    layout
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className={cn(
+                      "rounded-2xl border transition-all",
+                      index === 0
+                        ? "border-blue-500/30 bg-blue-500/[0.03]"
+                        : "border-white/5 bg-white/[0.01]"
+                    )}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "mt-1 flex h-8 w-8 items-center justify-center rounded-lg",
+                          index === 0 ? "bg-blue-600/10 text-blue-400" : "bg-white/5 text-slate-600"
+                        )}>
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-xs font-bold text-slate-200">{document.name}</p>
+                            {index === 0 && (
+                              <span className="shrink-0 text-[8px] font-black uppercase text-blue-500">Active</span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-[10px] font-medium text-slate-600">
+                            {document.chunks} chunks • {document.uploadedAt}
+                          </p>
+                        </div>
                       </div>
                     </div>
-
-                    {index === 0 ? (
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-900">
-                        Active
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <p className="text-xs text-slate-500">Added at {document.uploadedAt}</p>
-                    <div className="inline-flex items-center gap-1 rounded-full bg-white/8 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-300">
-                      <Sparkles className="h-3 w-3" />
-                      ready
-                    </div>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-5 text-sm leading-6 text-slate-300">
-                No context yet.
-              </div>
-            )}
+                  </motion.article>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/5 bg-white/[0.01] px-4 py-10 text-center">
+                  <p className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">No Sources Added</p>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
       </div>
+      
+      <footer className="shrink-0 p-5 border-t border-white/5">
+        <div className="rounded-xl bg-white/[0.02] p-4 flex items-center justify-between">
+          <span className="text-[10px] font-bold text-slate-500 uppercase">Index Ready</span>
+          <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(56,189,248,0.4)]" />
+        </div>
+      </footer>
     </aside>
   )
 }

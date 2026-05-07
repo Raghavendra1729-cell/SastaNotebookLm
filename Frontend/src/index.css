@@ -2,8 +2,8 @@
 @import 'tailwindcss';
 
 :root {
-  color: #e2e8f0;
-  background: #0c0e12;
+  color: #f1f5f9;
+  background: #020617;
   font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,134 +15,70 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #0c0e12 0%, #11141a 100%);
+  background: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%);
 }
 
-button,
-input,
-textarea {
-  font: inherit;
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-#root {
-  min-height: 100vh;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-::selection {
-  background: rgba(148, 163, 184, 0.25);
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
-.markdown-body > *:first-child {
-  margin-top: 0;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
-.markdown-body > *:last-child {
-  margin-bottom: 0;
+/* Markdown Overrides for Readability */
+.markdown-body {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #cbd5e1;
 }
 
-.markdown-body p,
-.markdown-body ul,
-.markdown-body ol,
-.markdown-body pre,
-.markdown-body blockquote {
-  margin: 0 0 0.9rem;
-}
-
-.markdown-body ul,
-.markdown-body ol {
-  padding-left: 1.25rem;
-}
-
-.markdown-body li + li {
-  margin-top: 0.35rem;
-}
-
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3 {
-  margin: 1.25rem 0 0.75rem;
-  color: #020617;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.markdown-body h1 {
-  font-size: 1.375rem;
-}
-
-.markdown-body h2 {
-  font-size: 1.15rem;
-}
-
-.markdown-body h3 {
-  font-size: 1rem;
-}
-
-.markdown-body a {
-  color: #0f766e;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.markdown-body code {
-  border-radius: 0.55rem;
-  background: #e2e8f0;
-  padding: 0.15rem 0.4rem;
-  font-size: 0.875em;
+.markdown-body p {
+  margin-bottom: 1.2rem;
 }
 
 .markdown-body pre {
-  overflow-x: auto;
-  border-radius: 1rem;
-  background: #0f172a;
-  padding: 1rem;
-  color: #e2e8f0;
+  background: #010409 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.2rem;
 }
 
-.markdown-body pre code {
-  background: transparent;
-  padding: 0;
+.markdown-body code {
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
 }
 
 .markdown-body blockquote {
-  border-left: 3px solid #94a3b8;
+  border-left: 4px solid #0ea5e9;
   padding-left: 1rem;
-  color: #475569;
-}
-
-.markdown-dark {
-  color: #e2e8f0;
-}
-
-.markdown-dark h1,
-.markdown-dark h2,
-.markdown-dark h3 {
-  color: #f8fafc;
-}
-
-.markdown-dark a {
-  color: #cbd5e1;
-}
-
-.markdown-dark code {
-  background: rgba(148, 163, 184, 0.18);
-  color: #f8fafc;
-}
-
-.markdown-dark pre {
-  background: rgba(2, 6, 23, 0.9);
-  color: #e2e8f0;
-}
-
-.markdown-dark blockquote {
-  border-left-color: rgba(148, 163, 184, 0.5);
-  color: #cbd5e1;
+  color: #94a3b8;
+  font-style: italic;
 }

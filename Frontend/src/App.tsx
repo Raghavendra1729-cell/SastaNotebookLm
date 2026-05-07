@@ -98,7 +98,7 @@ function App() {
           ...current,
         ])
 
-        showToast('success', `${payload.filename} uploaded. ${payload.chunks} chunks indexed.`)
+        showToast('success', `${payload.filename} uploaded.`)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Upload failed.'
         showToast('error', message)
@@ -120,7 +120,7 @@ function App() {
         return
       }
 
-      const textFile = new File([pastedText], `pasted-note-${Date.now()}.txt`, {
+      const textFile = new File([pastedText], `note-${Date.now()}.txt`, {
         type: 'text/plain',
       })
       await uploadDocument(textFile, 'paste')
@@ -176,7 +176,7 @@ function App() {
 
   const handlePasteButtonClick = async () => {
     if (!navigator.clipboard?.readText) {
-      showToast('error', 'Clipboard paste is not available in this browser.')
+      showToast('error', 'Clipboard paste is not available.')
       return
     }
 
@@ -184,7 +184,7 @@ function App() {
       const clipboardText = await navigator.clipboard.readText()
       await uploadPastedText(clipboardText)
     } catch {
-      showToast('error', 'Clipboard access was blocked. Use Ctrl+V or Cmd+V instead.')
+      showToast('error', 'Clipboard access blocked.')
     }
   }
 
@@ -219,7 +219,7 @@ function App() {
 
       if (!response.ok) {
         const errorBody = (await response.json().catch(() => null)) as { detail?: string } | null
-        throw new Error(errorBody?.detail ?? 'Chat request failed.')
+        throw new Error(errorBody?.detail ?? 'Chat failed.')
       }
 
       const payload = (await response.json()) as ChatResponse
@@ -233,13 +233,13 @@ function App() {
         },
       ])
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Chat request failed.'
+      const message = error instanceof Error ? error.message : 'Chat failed.'
       setMessages((current) => [
         ...current,
         {
           id: createId(),
           role: 'assistant',
-          content: `I hit an error while contacting the backend.\n\n${message}`,
+          content: `Connection error.\n\n${message}`,
         },
       ])
       showToast('error', message)
@@ -268,21 +268,23 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0c0e12] text-white">
-      <div className="min-h-screen lg:grid lg:grid-cols-[270px_minmax(0,1fr)_330px]">
+    <main className="h-screen w-full overflow-hidden bg-[#020617] text-slate-200">
+      <div className="flex h-full w-full">
         <InstructionRail />
 
-        <ChatPanel
-          activeDocument={activeDocument}
-          messages={messages}
-          prompt={prompt}
-          isChatting={isChatting}
-          canChat={canChat}
-          chatViewportRef={chatViewportRef}
-          onPromptChange={setPrompt}
-          onSubmit={handleChatSubmit}
-          onPromptKeyDown={handlePromptKeyDown}
-        />
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-transparent">
+          <ChatPanel
+            activeDocument={activeDocument}
+            messages={messages}
+            prompt={prompt}
+            isChatting={isChatting}
+            canChat={canChat}
+            chatViewportRef={chatViewportRef}
+            onPromptChange={setPrompt}
+            onSubmit={handleChatSubmit}
+            onPromptKeyDown={handlePromptKeyDown}
+          />
+        </div>
 
         <SourceDock
           documents={documents}
