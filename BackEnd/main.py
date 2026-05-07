@@ -11,15 +11,16 @@ app = FastAPI(title="Sasta NotebookLm")
 
 def get_cors_origins() -> list[str]:
     configured_origins = os.getenv(
-        "CORS_ORIGINS","http://localhost:5173,http://127.0.0.1:5173,*", 
+        "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,*"
     )
-    return [origin.strip() for origin in configured_origins.split(",") if origin.strip()]
+    # Strip trailing slashes and whitespace to avoid common configuration errors
+    return [origin.strip().rstrip("/") for origin in configured_origins.split(",") if origin.strip()]
 
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
