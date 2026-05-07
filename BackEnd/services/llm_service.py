@@ -8,18 +8,20 @@ client = OpenAI(
 )
 
 async def get_llm_answer(query: str, context: str, history: list) -> str:
-    messages = [
-        {"role": "system", "content": RAG_SYSTEM_PROMPT.format(context=context)}
-    ]
-    
+    has_context = bool(context and context.strip())
+    system_prompt = (
+        RAG_SYSTEM_PROMPT.format(context=context)
+        if has_context
+        else "You are a helpful AI assistant."
+    )
+    messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history)
-    
     messages.append({"role": "user", "content": query})
 
     try:
         response = client.chat.completions.create(
             model=HF_MODEL,
-            messages=messages, # type: ignore
+            messages=messages,  # type: ignore
             temperature=0.1,
             max_tokens=512
         )

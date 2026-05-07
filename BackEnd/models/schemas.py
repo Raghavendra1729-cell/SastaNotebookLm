@@ -7,7 +7,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: List[Message]
+    history: List[Message] = []
 
 class ChatResponse(BaseModel):
     answer: str

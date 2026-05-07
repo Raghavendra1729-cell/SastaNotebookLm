@@ -51,6 +51,11 @@ async def ingest_document(file_path: str, extension: str) -> int:
     return len(chunks)
 
 async def get_context(query: str, top_k: int = 3) -> str:
-    vector_store = get_vector_store()
-    search_results = vector_store.similarity_search(query, k=top_k)
-    return "\n\n---\n\n".join([doc.page_content for doc in search_results])
+    try:
+        vector_store = get_vector_store()
+        search_results = vector_store.similarity_search(query, k=top_k)
+        if not search_results:
+            return ""
+        return "\n\n---\n\n".join([doc.page_content for doc in search_results])
+    except Exception:
+        return ""
