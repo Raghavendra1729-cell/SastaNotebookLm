@@ -5,14 +5,13 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from core.config import GOOGLE_API_KEY
+from core.config import GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY
 
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-2",
-    google_api_key=GOOGLE_API_KEY
+    api_key=GOOGLE_API_KEY
 )
 
-QDRANT_PATH = "./local_qdrant"
 COLLECTION_NAME = "notebook_collection"
 
 _client = None
@@ -21,7 +20,14 @@ _vector_store = None
 def get_vector_store():
     global _client, _vector_store
     if _client is None:
-        _client = QdrantClient(path=QDRANT_PATH)
+        if QDRANT_URL and QDRANT_API_KEY:
+            _client = QdrantClient(
+                url=QDRANT_URL,
+                api_key=QDRANT_API_KEY,
+            )
+        else:
+            _client = QdrantClient(path="./local_qdrant")
+            
         if not _client.collection_exists(COLLECTION_NAME):
             _client.create_collection(
                 collection_name=COLLECTION_NAME,
