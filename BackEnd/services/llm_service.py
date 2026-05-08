@@ -23,7 +23,7 @@ async def get_llm_answer(query: str, context: str, history: list) -> str:
             model=HF_MODEL,
             messages=messages,  # type: ignore
             temperature=0.1,
-            max_tokens=512
+            max_tokens=2048
         )
         return response.choices[0].message.content  # type: ignore
     except Exception as e:

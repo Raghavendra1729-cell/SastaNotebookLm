@@ -63,13 +63,13 @@ async def ingest_document(file_path: str, extension: str) -> int:
         loader = TextLoader(file_path)
     docs = loader.load()
     
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
     chunks = splitter.split_documents(docs)
 
     vector_store.add_documents(chunks)
     return len(chunks)
 
-async def get_context(query: str, top_k: int = 3) -> str:
+async def get_context(query: str, top_k: int = 10) -> str:
     try:
         vector_store = get_vector_store()
         search_results = vector_store.similarity_search(query, k=top_k)
