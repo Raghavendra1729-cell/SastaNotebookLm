@@ -27,6 +27,19 @@ app.add_middleware(
 app.include_router(upload.router, tags=["Ingestion"])
 app.include_router(chat.router, tags=["Conversation"])
 
+@app.get("/health")
+def health_check():
+    from core.config import HF_KEY, QDRANT_URL, QDRANT_API_KEY, GOOGLE_API_KEY
+    return {
+        "status": "healthy",
+        "keys_found": {
+            "HF_KEY": bool(HF_KEY),
+            "QDRANT_URL": bool(QDRANT_URL),
+            "QDRANT_API_KEY": bool(QDRANT_API_KEY),
+            "GOOGLE_API_KEY": bool(GOOGLE_API_KEY)
+        }
+    }
+
 @app.get("/")
 def read_root():
     return {"status": "NotebookLM Backend is running perfectly."}

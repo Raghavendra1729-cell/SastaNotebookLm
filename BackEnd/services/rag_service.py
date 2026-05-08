@@ -32,9 +32,22 @@ def get_vector_store():
             else:
                 print("Connecting to local Qdrant")
                 _client = QdrantClient(path="./local_qdrant")
-                
-            if not _client.collection_exists(COLLECTION_NAME):
-                print(f"Creating collection {COLLECTION_NAME} with size {VECTOR_SIZE}")
+            
+            # Check for dimension mismatch and recreate if necessary
+            should_recreate = False
+            if _client.collection_exists(COLLECTION_NAME):
+                col_info = _client.get_collection(COLLECTION_NAME)
+                # Check the first vector's size (standard in Qdrant)
+                existing_size = col_info.config.params.vectors.size
+                if existing_size != VECTOR_SIZE:
+                    print(f"Dimension mismatch: Existing {existing_size}, Expected {VECTOR_SIZE}. Recreating...")
+                    should_recreate = True
+            else:
+                should_recreate = True
+
+            if should_recreate:
+                if _client.collection_exists(COLLECTION_NAME):
+                    _client.delete_collection(COLLECTION_NAME)
                 _client.create_collection(
                     collection_name=COLLECTION_NAME,
                     vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
