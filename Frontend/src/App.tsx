@@ -98,8 +98,16 @@ function App() {
         })
 
         if (!response.ok) {
-          const errorBody = (await response.json().catch(() => null)) as { detail?: string } | null
-          throw new Error(errorBody?.detail ?? `Upload failed with status ${response.status}`)
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorBody = await response.json().catch(() => null);
+            throw new Error(errorBody?.detail ?? `Upload failed with status ${response.status}`);
+          } else {
+            const text = await response.text();
+            if (response.status === 504) throw new Error("Vercel 504 Timeout: The file took too long to process (10s limit). Try a smaller file.");
+            if (response.status === 413) throw new Error("Vercel 413 Error: The file is too large (4.5MB limit).");
+            throw new Error(`Server error (${response.status}): The backend crashed. Check server logs.`);
+          }
         }
 
         const payload = (await response.json()) as UploadResponse
@@ -238,8 +246,13 @@ function App() {
       })
 
       if (!response.ok) {
-        const errorBody = (await response.json().catch(() => null)) as { detail?: string } | null
-        throw new Error(errorBody?.detail ?? 'Chat failed.')
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorBody = await response.json().catch(() => null);
+          throw new Error(errorBody?.detail ?? 'Chat failed.');
+        } else {
+          throw new Error(`Server error (${response.status}): The backend crashed. Check server logs.`);
+        }
       }
 
       const payload = (await response.json()) as ChatResponse

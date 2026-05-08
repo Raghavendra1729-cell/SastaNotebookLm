@@ -21,58 +21,89 @@ _vector_store = None
 
 def get_vector_store():
     global _client, _vector_store
-    if _client is None:
-        if QDRANT_URL and QDRANT_API_KEY:
-            _client = QdrantClient(
-                url=QDRANT_URL,
-                api_key=QDRANT_API_KEY,
-            )
-        else:
-            _client = QdrantClient(path="./local_qdrant")
-            
-        if not _client.collection_exists(COLLECTION_NAME):
-            _client.create_collection(
+    try:
+        if _client is None:
+            if QDRANT_URL and QDRANT_API_KEY:
+                print(f"Connecting to Qdrant Cloud at {QDRANT_URL}")
+                _client = QdrantClient(
+                    url=QDRANT_URL,
+                    api_key=QDRANT_API_KEY,
+                )
+            else:
+                print("Connecting to local Qdrant")
+                _client = QdrantClient(path="./local_qdrant")
+                
+            if not _client.collection_exists(COLLECTION_NAME):
+                print(f"Creating collection {COLLECTION_NAME} with size {VECTOR_SIZE}")
+                _client.create_collection(
+                    collection_name=COLLECTION_NAME,
+                    vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+                )
+        
+        if _vector_store is None:
+            _vector_store = QdrantVectorStore(
+                client=_client,
                 collection_name=COLLECTION_NAME,
-                vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+                embedding=embeddings,
             )
-    
-    if _vector_store is None:
-        _vector_store = QdrantVectorStore(
-            client=_client,
-            collection_name=COLLECTION_NAME,
-            embedding=embeddings,
-        )
-    return _vector_store
+        return _vector_store
+    except Exception as e:
+        print(f"Error in get_vector_store: {str(e)}")
+        raise
 
 async def clear_all_data():
     global _client, _vector_store
-    if _client is None:
-        get_vector_store()
-    
-    if _client.collection_exists(COLLECTION_NAME):
-        _client.delete_collection(COLLECTION_NAME)
+    try:
+        if _client is None:
+            get_vector_store()
+        
+        print(f"Clearing collection {COLLECTION_NAME}")
+        if _client.collection_exists(COLLECTION_NAME):
+            _client.delete_collection(COLLECTION_NAME)
+        
         _client.create_collection(
             collection_name=COLLECTION_NAME,
             vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
         )
-    _vector_store = None # Reset vector store to ensure it re-initializes with the new collection
+        _vector_store = None 
+    except Exception as e:
+        print(f"Error in clear_all_data: {str(e)}")
+        raise
 
 async def ingest_document(file_path: str, extension: str) -> int:
-    vector_store = get_vector_store()
-    if extension == ".pdf":
-        loader = PyPDFLoader(file_path)
-    else:
-        loader = TextLoader(file_path)
-    docs = loader.load()
-    
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
-    chunks = splitter.split_documents(docs)
+    try:
+        vector_store = get_vector_store()
+        if extension == ".pdf":
+            loader = PyPDFLoader(file_path)
+        else:
+            loader = TextLoader(file_path)
+        docs = loader.load()
+        
+        splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
+        chunks = splitter.split_documents(docs)
 
-    # We remove the heavy delays and batching to try and beat the Vercel 10s timeout.
-    # Hugging Face Inference API generally handles larger batches better than Gemini Free Tier.
-    vector_store.add_documents(chunks)
+        print(f"Ingesting {len(chunks)} chunks into Qdrant using Hugging Face")
+        
+        # Batch ingestion to prevent HF API from throwing "Expecting value line 1 char 0" (Timeout/413)
+        batch_size = 20
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i : i + batch_size]
+            try:
+                vector_store.add_documents(batch)
+                print(f"Successfully added batch {i//batch_size + 1}")
+            except Exception as batch_err:
+                print(f"Failed on batch {i//batch_size + 1}: {str(batch_err)}")
+                if "Expecting value" in str(batch_err):
+                    raise Exception("Hugging Face API failed to process the text. Check your HF_KEY or try a smaller file.")
+                raise
             
-    return len(chunks)
+            if i + batch_size < len(chunks):
+                await asyncio.sleep(0.5) # Very small delay for HF rate limits
+                
+        return len(chunks)
+    except Exception as e:
+        print(f"Error in ingest_document: {str(e)}")
+        raise
 
 async def get_context(query: str, top_k: int = 10) -> str:
     try:
