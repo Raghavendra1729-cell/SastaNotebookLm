@@ -2,19 +2,19 @@
 import asyncio
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from core.config import GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY, HF_KEY
+from core.config import GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY
 
-embeddings = HuggingFaceInferenceAPIEmbeddings(
-    api_key=HF_KEY, 
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-2",
+    api_key=GOOGLE_API_KEY
 )
 
 COLLECTION_NAME = "notebook_collection"
-VECTOR_SIZE = 384 
+VECTOR_SIZE = 3072 # Dimension for Google Gemini Embedding 2
 
 _client = None
 _vector_store = None
@@ -37,7 +37,6 @@ def get_vector_store():
             should_recreate = False
             if _client.collection_exists(COLLECTION_NAME):
                 col_info = _client.get_collection(COLLECTION_NAME)
-                # Check the first vector's size (standard in Qdrant)
                 existing_size = col_info.config.params.vectors.size
                 if existing_size != VECTOR_SIZE:
                     print(f"Dimension mismatch: Existing {existing_size}, Expected {VECTOR_SIZE}. Recreating...")
@@ -95,23 +94,15 @@ async def ingest_document(file_path: str, extension: str) -> int:
         splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
         chunks = splitter.split_documents(docs)
 
-        print(f"Ingesting {len(chunks)} chunks into Qdrant using Hugging Face")
+        print(f"Ingesting {len(chunks)} chunks into Qdrant using Google Embeddings")
         
-        # Batch ingestion to prevent HF API from throwing "Expecting value line 1 char 0" (Timeout/413)
-        batch_size = 20
+        # Batch ingestion to avoid "Quota Exceeded" (429) errors on Google Free Tier
+        batch_size = 40 
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
-            try:
-                vector_store.add_documents(batch)
-                print(f"Successfully added batch {i//batch_size + 1}")
-            except Exception as batch_err:
-                print(f"Failed on batch {i//batch_size + 1}: {str(batch_err)}")
-                if "Expecting value" in str(batch_err):
-                    raise Exception("Hugging Face API failed to process the text. Check your HF_KEY or try a smaller file.")
-                raise
-            
+            vector_store.add_documents(batch)
             if i + batch_size < len(chunks):
-                await asyncio.sleep(0.5) # Very small delay for HF rate limits
+                await asyncio.sleep(2) # Delay to stay under 15 RPM limit
                 
         return len(chunks)
     except Exception as e:
