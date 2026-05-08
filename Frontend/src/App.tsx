@@ -84,14 +84,22 @@ function App() {
         const formData = new FormData()
         formData.append('file', file)
 
+        console.log(`Uploading ${file.name} (${file.size} bytes) to ${API_BASE_URL}/upload`)
+        
         const response = await fetch(`${API_BASE_URL}/upload`, {
           method: 'POST',
           body: formData,
+        }).catch(err => {
+          console.error("Network error or timeout:", err)
+          if (file.size > 4.5 * 1024 * 1024) {
+            throw new Error(`Network error. If you are on Vercel, 9MB is above the 4.5MB limit. Try a smaller file or run locally.`)
+          }
+          throw new Error(`Failed to connect to backend at ${API_BASE_URL}. Check if server is running and CORS/Mixed Content is allowed.`)
         })
 
         if (!response.ok) {
           const errorBody = (await response.json().catch(() => null)) as { detail?: string } | null
-          throw new Error(errorBody?.detail ?? 'Upload failed.')
+          throw new Error(errorBody?.detail ?? `Upload failed with status ${response.status}`)
         }
 
         const payload = (await response.json()) as UploadResponse

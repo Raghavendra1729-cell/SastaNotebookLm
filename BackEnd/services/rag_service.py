@@ -1,4 +1,5 @@
 # services/rag_service.py
+import asyncio
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -66,7 +67,16 @@ async def ingest_document(file_path: str, extension: str) -> int:
     splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
     chunks = splitter.split_documents(docs)
 
-    vector_store.add_documents(chunks)
+    # Batch ingestion to avoid "Quota Exceeded" (429) errors on Google Free Tier
+    # Google Gemini Free Tier has a limit of ~15 Requests Per Minute.
+    batch_size = 40 
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
+        vector_store.add_documents(batch)
+        if i + batch_size < len(chunks):
+            # Wait 2 seconds between batches to stay under the 15 RPM limit
+            await asyncio.sleep(2)
+            
     return len(chunks)
 
 async def get_context(query: str, top_k: int = 10) -> str:
