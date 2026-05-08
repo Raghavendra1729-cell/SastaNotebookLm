@@ -42,6 +42,19 @@ def get_vector_store():
         )
     return _vector_store
 
+async def clear_all_data():
+    global _client, _vector_store
+    if _client is None:
+        get_vector_store()
+    
+    if _client.collection_exists(COLLECTION_NAME):
+        _client.delete_collection(COLLECTION_NAME)
+        _client.create_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+        )
+    _vector_store = None # Reset vector store to ensure it re-initializes with the new collection
+
 async def ingest_document(file_path: str, extension: str) -> int:
     vector_store = get_vector_store()
     if extension == ".pdf":

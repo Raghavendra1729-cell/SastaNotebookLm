@@ -4,9 +4,17 @@ import shutil
 import tempfile
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from models.schemas import UploadResponse
-from services.rag_service import ingest_document
+from services.rag_service import ingest_document, clear_all_data
 
 router = APIRouter()
+
+@router.delete("/clear")
+async def clear_data():
+    try:
+        await clear_all_data()
+        return {"message": "All data cleared successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_file(file: UploadFile = File(...)):

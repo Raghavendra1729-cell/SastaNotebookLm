@@ -60,6 +60,18 @@ function App() {
     })
   }, [messages, isChatting])
 
+  // Clear backend data on mount/refresh
+  useEffect(() => {
+    const clearBackend = async () => {
+      try {
+        await fetch(`${API_BASE_URL}/clear`, { method: 'DELETE' })
+      } catch (error) {
+        console.error('Failed to clear backend data:', error)
+      }
+    }
+    clearBackend()
+  }, [])
+
   const showToast = (tone: ToastState['tone'], message: string) => {
     setToast({ tone, message })
   }
