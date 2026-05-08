@@ -2,18 +2,19 @@
 import asyncio
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from core.config import GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY
+from core.config import GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY, HF_KEY
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-2",
-    api_key=GOOGLE_API_KEY
+embeddings = HuggingFaceInferenceAPIEmbeddings(
+    api_key=HF_KEY, 
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 COLLECTION_NAME = "notebook_collection"
+VECTOR_SIZE = 384 
 
 _client = None
 _vector_store = None
@@ -32,7 +33,7 @@ def get_vector_store():
         if not _client.collection_exists(COLLECTION_NAME):
             _client.create_collection(
                 collection_name=COLLECTION_NAME,
-                vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+                vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
             )
     
     if _vector_store is None:
@@ -52,7 +53,7 @@ async def clear_all_data():
         _client.delete_collection(COLLECTION_NAME)
         _client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=3072, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
         )
     _vector_store = None # Reset vector store to ensure it re-initializes with the new collection
 
@@ -67,15 +68,9 @@ async def ingest_document(file_path: str, extension: str) -> int:
     splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=400)
     chunks = splitter.split_documents(docs)
 
-    # Batch ingestion to avoid "Quota Exceeded" (429) errors on Google Free Tier
-    # Google Gemini Free Tier has a limit of ~15 Requests Per Minute.
-    batch_size = 40 
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        vector_store.add_documents(batch)
-        if i + batch_size < len(chunks):
-            # Wait 2 seconds between batches to stay under the 15 RPM limit
-            await asyncio.sleep(2)
+    # We remove the heavy delays and batching to try and beat the Vercel 10s timeout.
+    # Hugging Face Inference API generally handles larger batches better than Gemini Free Tier.
+    vector_store.add_documents(chunks)
             
     return len(chunks)
 
