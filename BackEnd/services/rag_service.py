@@ -112,7 +112,7 @@ async def ingest_document(file_path: str, extension: str) -> int:
 async def get_context(query: str, top_k: int = 10) -> str:
     try:
         vector_store = get_vector_store()
-        search_results = vector_store.similarity_search(query, k=top_k)
+        search_results = await vector_store.asimilarity_search(query, k=top_k)
         if not search_results:
             return ""
         return "\n\n---\n\n".join([doc.page_content for doc in search_results])
